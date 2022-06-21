@@ -1,0 +1,32 @@
+Scenario Name - CIB - Previous Average Activity
+
+Focus - Account (AC), Correspondent Bank (CB)
+
+Scenario Class - Money Laundering
+
+Scenario Objective - 
+A large number of transactions happen on a daily basis, it can be related to funds transfer, cheques, cash deposits, etc. And these huge number of transactions make it difficult for checking the anomalies in a perticular transaction.
+Thus, this scenario aims in detecting any anomaly if there are any significant changes from the average of previous monthly transactional activity.
+
+This scenario monitors changes for all types of transactions for seasoned accounts and seasoned correspondent banks.
+
+Seasoned account - A seasoned account is defined as an account that is opened on or before the Min Open Days from the current date
+
+Seasoned correspondent bank - The account associated with the correspondent bank with the earliest account open date is checked to determine whether the correspondent bank is seasoned
+
+How does this scenario work -
+The current month's activity is compared to the average activity from the specified number of months prior to the current month to generate alerts fro behavior changes that are significant
+**
+    A variable needs to be created for obtaining the number of months
+**
+
+A condition is also set, whether to include or exclude the month with no activity
+** 
+    A flag needs to be created
+    If "Include Months with No Activity" == Y:
+        Avg Monthly Credit (Debit) Transaction Amount of specified number of previous months =
+        Total Credit (Debit) Transaction Amount of Specified Number of Previous Months / Number of months defined in lookback period
+    Else If "Include Months with No Activity" == N:
+        Avg Monthly Credit (Debit) Transaction Amount of specified number of previous months =
+        Total Credit (Debit) Transaction Amount of Specified Number of Previous Months / Number of months in which the transaction was present
+**
