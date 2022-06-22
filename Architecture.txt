@@ -1,0 +1,8 @@
+# Calculate Average Monthly Credit (Debit) Transaction Amount (formula given)
+    Calculate separately for Credit & Debit
+    For this we need a flag - Include Months with No Activity (Y, N)
+# Run the same for both AC & CB
+# Alert generation logic - common for both CB & AC
+
+
+------------------

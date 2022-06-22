@@ -1,2 +1,4 @@
 Number of months
 Lookback period (months)
+Minimum Number of SD
+Max Number of SD
