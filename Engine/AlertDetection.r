@@ -1,6 +1,13 @@
 # Libraries
 library(xlsx)
 
+# Global variables
+avgMonthlyCreditDebitTransaction <- data.frame(
+    accountNumber <- c(),
+    avgAmount <- c(),
+    inBound <- c()
+)
+
 # Data Extraction
 # Configurable parameters fill
 # Logic run
@@ -27,4 +34,9 @@ populateConfigurationParameters <- function() {
     # Non Tunable
     # Daily = "D", Monthly = "M", Weekly = "W", Yearly = "Y"
     frequencyPeriod <<- "M"
+}
+
+avgMonthlyCreditTransactionAmount <- function(data) {
+    # Extracting distinct account numbers using factor object
+    accountNumbers <- factor(data$AccountNumber)
 }
