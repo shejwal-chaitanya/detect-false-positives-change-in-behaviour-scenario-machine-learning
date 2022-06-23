@@ -1,8 +1,12 @@
+# Libraries
+library(xlsx)
+
 # Data Extraction
 # Configurable parameters fill
 # Logic run
 
 # Data Extraction
+data <- read.xlsx("../Data/CIB_Data.xlsx")
 
 # Configurations
 # Tunable
