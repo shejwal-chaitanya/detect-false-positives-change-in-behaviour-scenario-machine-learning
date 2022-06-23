@@ -44,11 +44,13 @@ populateConfigurationParameters <- function() {
 }
 
 addAccountTransactionDetails <- function(accountNumber, avgAmount, inBound) {
-    if (!accountNumber %in% gbAccountNumber) {
+    # Condition - To ensure no account number is repeated for same inbound type
+    if (nrow(subset(avgMonthlyCreditDebitTransaction, gbAccountNumber == accountNumber & gbInBound == inBound)) == 0) {
         gbAccountNumber <<- append(gbAccountNumber, accountNumber)
         gbAvgAmount <<- append(gbAvgAmount, avgAmount)
         gbInBound <<- append(gbInBound, inBound)   
     }
+    avgMonthlyCreditDebitTransaction <<- rbind(avgMonthlyCreditDebitTransaction, data.frame(gbAccountNumber, gbAvgAmount, gbInBound))
 }
 
 getLastDateOfPreviousMonth <- function(latestDate) {
@@ -76,8 +78,6 @@ getTotalAmount <- function(data) {
 getNumberOfMonthsWithNoActivity <- function(data) {
 
     summarisedAccountData <- subset(data, getLastDateOfPreviousMonth(max(as.Date(data$Date))) >= getCeilingDateBeforeLookbackPeriod(max(as.Date(data$Date)))) %>% group_by(format(as.Date(data$Date)), "%m") %>% summarise(totalAmount = sum(data$Amount))
-
-    # summarisedAccountData <- subset(data$Date, getLastDateOfPreviousMonth(max(as.Date(data$Date))) >= getCeilingDateBeforeLookbackPeriod(max(as.Date(data$Date)))) %>% group_by(format(as.Date(data$Date)), "%m") %>% summarise(totalAmount = sum(data$Amount))
 
     return (nrow(summarisedAccountData))
 }
@@ -113,8 +113,7 @@ avgMonthlyCreditTransactionAmount <- function(data) {
 }
 
 showOutput <- function() {
-    new_df <- data.frame(gbAccountNumber, gbAvgAmount, gbInBound)
-    print(new_df)
+    print(avgMonthlyCreditDebitTransaction)
 }
 
 readData()
