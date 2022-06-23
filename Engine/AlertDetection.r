@@ -24,6 +24,7 @@ monthlyFrequency <<- "M"
 readData <- function() {
     configData <<- read.csv("../Data/Configurations.csv")
     transactionData <<- read.csv("../Data/Transactions.csv")
+    accountDetailsData <<- read.csv("../Data/AccountDetails.csv")
 }
 
 # Configurations
@@ -116,7 +117,69 @@ showOutput <- function() {
     print(avgMonthlyCreditDebitTransaction)
 }
 
+calculateAggregateAmount <- function(data, accountNumber, inBoundType) {
+    return (sum(subset(data$Amount, data$AccountNumber == accountNumber & data$InBound == inBoundType)))
+}
+
+calculateStandardDeviation <- function(data, accountNumber, inBoundType) {
+    return (sd(subset(data$Amount, data$AccountNumber == accountNumber & data$InBound == inBoundType)))
+}
+
+getAvgAmount <- function(data, accountNumber, inBoundType) {
+    return (subset(avgMonthlyCreditDebitTransaction$gbAvgAmount, avgMonthlyCreditDebitTransaction$gbAccountNumber == accountNumber & avgMonthlyCreditDebitTransaction$gbInBound == inBoundType))
+}
+
+getAggregateCurrentMonthsTransaction <- function(data, accountNumber, inBoundType) {
+    data <- subset(data, data$AccountNumber == accountNumber & data$InBound == inBoundType)
+    currentMonthsFirstDate <- ceiling_date(Sys.Date() - months(1), "month")
+    data <- subset(data, as.Date(Sys.Date()) >= currentMonthsFirstDate)
+    return (sum(data$Amount))
+}
+
+getAccountOpenDate <- function(data, accountNumber) {
+    data <- subset(data, data$AccountNumber == accountNumber)
+    return (as.Date(data$AccountOpenDate))
+}
+
+alertGeneration <- function() {
+    accounts <- factor(avgMonthlyCreditDebitTransaction$gbAccountNumber)
+    for (accountNumber in levels(accounts)) {
+        alertsGenerated <- c()
+        # Calculation of necessary amounts
+        aggCurrentMonthCreditTransactions <- getAggregateCurrentMonthsTransaction(transactionData, accountNumber, inBoundCredit)
+        aggCurrentMonthDebitTransactions <- getAggregateCurrentMonthsTransaction(transactionData, accountNumber, inBoundDebit)
+        accountOpenDate <- getAccountOpenDate(transactionData, accountNumber)
+        avgCreditAmount <- getAvgAmount(avgMonthlyCreditDebitTransaction, accountNumber, inBoundCredit)
+        avgDebitAmount <- getAvgAmount(avgMonthlyCreditDebitTransaction, accountNumber, inBoundDebit)
+        sdCreditAmount <- calculateStandardDeviation(transactionData, accountNumber, inBoundCredit)
+        sdDebitAmount <- calculateStandardDeviation(transactionData, accountNumber, inBoundDebit)
+
+        if (accountOpenDate <= (Sys.Date() - gbMinOpenDays)) {
+            alertsGenerated <- append(alertsGenerated, "Minimum Open Days Alert")
+        }
+
+        if ((aggCurrentMonthCreditTransactions - avgCreditAmount) >= (sdCreditAmount * gbMinNumberSD)) {
+            alertsGenerated <- append(alertsGenerated, "Agg Amount - Avg Amount >= SD x Min(SD)")
+        }
+
+        if ((aggCurrentMonthCreditTransactions - avgCreditAmount) <= (sdCreditAmount * gbMaxNumberSD)) {
+            alertsGenerated <- append(alertsGenerated, "Agg Amount - Avg Amount <= SD x Max(SD)")
+        }
+
+        if (aggCurrentMonthCreditTransactions >= gbMinCurrentMonthAmt) {
+            alertsGenerated <- append(alertsGenerated, "Avg amount exceeds minimum current month amount")
+        }
+
+        if ((aggCurrentMonthCreditTransactions - avgCreditAmount) >= (avgCreditAmount * gbMinPercentageIncrease)) {
+            alertsGenerated <- append(alertsGenerated, "Last Condition")
+        }
+    }
+
+    print(alertsGenerated)
+}
+
 readData()
 populateConfigurationParameters()
 avgMonthlyCreditTransactionAmount(transactionData)
 showOutput()
+alertGeneration()
