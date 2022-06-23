@@ -74,7 +74,10 @@ getTotalAmount <- function(data) {
 }
 
 getNumberOfMonthsWithNoActivity <- function(data) {
-    summarisedAccountData <- subset(data$Date, getLastDateOfPreviousMonth(data$Date) >= getCeilingDateBeforeLookbackPeriod(data$Date)) %>% group_by(format(data$Date), "%m") %>% summarise(totalAmount = sum(data$Amount))
+
+    summarisedAccountData <- subset(data, getLastDateOfPreviousMonth(max(as.Date(data$Date))) >= getCeilingDateBeforeLookbackPeriod(max(as.Date(data$Date)))) %>% group_by(format(as.Date(data$Date)), "%m") %>% summarise(totalAmount = sum(data$Amount))
+
+    # summarisedAccountData <- subset(data$Date, getLastDateOfPreviousMonth(max(as.Date(data$Date))) >= getCeilingDateBeforeLookbackPeriod(max(as.Date(data$Date)))) %>% group_by(format(as.Date(data$Date)), "%m") %>% summarise(totalAmount = sum(data$Amount))
 
     return (nrow(summarisedAccountData))
 }
@@ -83,10 +86,10 @@ calculateAvgMonthlyTransaction <- function(data, inBound) {
     if (gbIncludeMonthsWithNoActivity == yes) {
         # Calculating Avg Monthly Credit Transaction Amount
         avgAmount <- (getTotalAmount(data) / gbLookBackPeriod)
-        addAccountTransactionDetails(unique(data$AccountNumber), avgAmount, inBound)
     } else {
-        avgAmount <- (getTotalAmount(data) / getNumberOfMonthsWithNoActivity(data)) 
+        avgAmount <- (getTotalAmount(data) / getNumberOfMonthsWithNoActivity(data))
     }
+    addAccountTransactionDetails(unique(data$AccountNumber), avgAmount, inBound)
 }
 
 avgMonthlyCreditTransactionAmount <- function(data) {

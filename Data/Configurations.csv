@@ -1,2 +1,2 @@
 ﻿DisplayAllTransaction,ExcludeCreditActivity,MinNumberSD,MaxNumberSD,MinCurrentMonthAmt,MinPercentageIncrease,IncludeMonthsWithNoActivity,LookbackPeriod,MinOpenDays
-Y,N,2,10,25000,200%,Y,3,180
+Y,N,2,10,25000,200%,N,3,180
