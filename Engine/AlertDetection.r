@@ -201,6 +201,7 @@ alertGenerator <- function(accountNumber, inBoundType, inBound) {
     }
     cat("Alerts Generated For AccountNumber - ", accountNumber, "\n")
     print(alertsGenerated)
+    alertsGenerated <<- c()
 }
 
 alertGeneration <- function() {
