@@ -200,6 +200,7 @@ alertGenerator <- function(accountNumber, inBoundType, inBound) {
     if (diffAggAvg >= mulAvgAmountMinPercentageIncrease) {
         alertsGenerated <<- append(alertsGenerated, "Last Condition")
     }
+    # Output the latest changes
     cat("Alerts Generated For AccountNumber - ", accountNumber, "\n")
     showOutput()
 }
