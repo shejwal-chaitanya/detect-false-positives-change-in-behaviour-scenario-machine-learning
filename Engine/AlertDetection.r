@@ -3,6 +3,7 @@ library(lubridate)
 library(dplyr)
 
 # Global variables
+alertsGenerated <<- c()
 gbAccountNumber <<- c()
 gbAvgAmount <<- c()
 gbInBound <<- c()
@@ -152,45 +153,67 @@ getAccountOpenDate <- function(data, accountNumber) {
     return (as.Date(data$AccountOpenDate))
 }
 
+alertGenerator <- function(accountNumber, inBoundType, inBound) {
+    # Calculation of necessary amounts
+    # Get Aggregate For Current Month Transactions For Given InBound Type
+    aggCurrentMonthTransactions <- getAggregateCurrentMonthsTransaction(transactionData, accountNumber, inBoundType)
+
+    # Get Account Open Date
+    accountOpenDate <- getAccountOpenDate(accountDetailsData, accountNumber)
+
+    # Get Average Credit Amount
+    avgAmount <- getAvgAmount(avgMonthlyCreditDebitTransaction, accountNumber, inBound)
+
+    # Get SD of Credit Amount
+    sdAmount <- calculateStandardDeviation(transactionData, accountNumber, inBoundType)
+
+    # Get difference between aggregate and average amount
+    diffAggAvg <- aggCurrentMonthTransactions - avgAmount
+    
+    # Multiplication of SD and Min Number SD
+    mulStdDevMinSd <- sdAmount * gbMinNumberSD
+    
+    # Multiplication of SD and Max Number SD
+    mulStdDevMaxSd <- sdAmount * gbMaxNumberSD
+
+    # Mulitiplied Average Amount with Minimum Percentage Increase
+    mulAvgAmountMinPercentageIncrease <- avgAmount * (gbMinPercentageIncrease/100)
+
+
+    if (accountOpenDate <= (Sys.Date() - gbMinOpenDays)) {
+        alertsGenerated <<- append(alertsGenerated, "Minimum Open Days Alert")
+    }
+        
+    if (diffAggAvg >= mulStdDevMinSd) {
+        alertsGenerated <<- append(alertsGenerated, "Agg Amount - Avg Amount >= SD x Min(SD)")
+    }
+
+    if (diffAggAvg <= mulStdDevMaxSd) {
+        alertsGenerated <<- append(alertsGenerated, "Agg Amount - Avg Amount <= SD x Max(SD)")
+    }
+
+    if (aggCurrentMonthTransactions >= gbMinCurrentMonthAmt) {
+        alertsGenerated <<- append(alertsGenerated, "Avg amount exceeds minimum current month amount")
+    }
+
+    if (diffAggAvg >= mulAvgAmountMinPercentageIncrease) {
+        alertsGenerated <<- append(alertsGenerated, "Last Condition")
+    }
+    cat("Alerts Generated For AccountNumber - ", accountNumber, "\n")
+    print(alertsGenerated)
+}
+
 alertGeneration <- function() {
     accounts <- factor(avgMonthlyCreditDebitTransaction$gbAccountNumber)
-    alertsGenerated <- c()
     for (accountNumber in levels(accounts)) {
         accountNumber <- as.numeric(accountNumber)
-        # Calculation of necessary amounts
-        aggCurrentMonthCreditTransactions <- getAggregateCurrentMonthsTransaction(transactionData, accountNumber, inBoundCreditType)
-        aggCurrentMonthDebitTransactions <- getAggregateCurrentMonthsTransaction(transactionData, accountNumber, inBoundDebitType)
-        accountOpenDate <- getAccountOpenDate(accountDetailsData, accountNumber)
-        avgCreditAmount <- getAvgAmount(avgMonthlyCreditDebitTransaction, accountNumber, inBoundCredit)
-        avgDebitAmount <- getAvgAmount(avgMonthlyCreditDebitTransaction, accountNumber, inBoundDebit)
-        sdCreditAmount <- calculateStandardDeviation(transactionData, accountNumber, inBoundCreditType)
-        sdDebitAmount <- calculateStandardDeviation(transactionData, accountNumber, inBoundDebitType)
-        diffAggAvg <- aggCurrentMonthCreditTransactions - avgCreditAmount
-        mulStdDevMinSd <- sdCreditAmount * gbMinNumberSD
-        mulStdDevMaxSd <- sdCreditAmount * gbMaxNumberSD
-        mulAvgCreditAmountMinPercentageIncrease <- avgCreditAmount * (gbMinPercentageIncrease/100)
-
-        if (accountOpenDate <= (Sys.Date() - gbMinOpenDays)) {
-            alertsGenerated <- append(alertsGenerated, "Minimum Open Days Alert")
-        }
         
-        if (diffAggAvg >= mulStdDevMinSd) {
-            alertsGenerated <- append(alertsGenerated, "Agg Amount - Avg Amount >= SD x Min(SD)")
-        }
+        # Generate Alerts for Credit Transactions
+        alertGenerator(accountNumber, inBoundCreditType, inBoundCredit)
 
-        if (diffAggAvg <= mulStdDevMaxSd) {
-            alertsGenerated <- append(alertsGenerated, "Agg Amount - Avg Amount <= SD x Max(SD)")
-        }
-
-        if (aggCurrentMonthCreditTransactions >= gbMinCurrentMonthAmt) {
-            alertsGenerated <- append(alertsGenerated, "Avg amount exceeds minimum current month amount")
-        }
-
-        if (diffAggAvg >= mulAvgCreditAmountMinPercentageIncrease) {
-            alertsGenerated <- append(alertsGenerated, "Last Condition")
-        }
+        # Generate Alerts for Debit Transactions
+        alertGenerator(accountNumber, inBoundDebitType, inBoundDebit)
     }    
-    print(alertsGenerated)
 }
 
 readData()
