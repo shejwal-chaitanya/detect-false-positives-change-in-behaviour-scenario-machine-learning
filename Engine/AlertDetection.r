@@ -115,7 +115,8 @@ avgMonthlyCreditTransactionAmount <- function(data) {
 }
 
 showOutput <- function() {
-    print(avgMonthlyCreditDebitTransaction)
+    print(alertsGenerated)
+    alertsGenerated <<- c()
 }
 
 calculateStandardDeviation <- function(data, accountNumber, inBoundType) {
@@ -200,8 +201,7 @@ alertGenerator <- function(accountNumber, inBoundType, inBound) {
         alertsGenerated <<- append(alertsGenerated, "Last Condition")
     }
     cat("Alerts Generated For AccountNumber - ", accountNumber, "\n")
-    print(alertsGenerated)
-    alertsGenerated <<- c()
+    showOutput()
 }
 
 alertGeneration <- function() {
@@ -224,5 +224,4 @@ alertGeneration <- function() {
 readData()
 populateConfigurationParameters()
 avgMonthlyCreditTransactionAmount(transactionData)
-showOutput()
 alertGeneration()
