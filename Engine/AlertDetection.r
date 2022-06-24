@@ -210,10 +210,14 @@ alertGeneration <- function() {
         accountNumber <- as.numeric(accountNumber)
         
         # Generate Alerts for Credit Transactions
-        alertGenerator(accountNumber, inBoundCreditType, inBoundCredit)
+        if(nrow(subset(transactionData, transactionData$AccountNumber == accountNumber & transactionData$InBound %in% inBoundCreditType) >= 1)) {
+            alertGenerator(accountNumber, inBoundCreditType, inBoundCredit)
+        }
 
         # Generate Alerts for Debit Transactions
+        if(nrow(subset(transactionData, transactionData$AccountNumber == accountNumber & transactionData$InBound %in% inBoundDebitType) >= 1)) {
         alertGenerator(accountNumber, inBoundDebitType, inBoundDebit)
+        }
     }    
 }
 
