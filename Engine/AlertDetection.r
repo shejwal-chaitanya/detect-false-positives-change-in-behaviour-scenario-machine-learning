@@ -214,7 +214,7 @@ alertGeneration <- function() {
             alertGenerator(accountNumber, inBoundCreditType, inBoundCredit)
         }
 
-        # Generate Alerts for Debit Transactions
+        # Generate Alerts for Debit Transaction
         if(nrow(subset(transactionData, transactionData$AccountNumber == accountNumber & transactionData$InBound %in% inBoundDebitType) >= 1)) {
         alertGenerator(accountNumber, inBoundDebitType, inBoundDebit)
         }
