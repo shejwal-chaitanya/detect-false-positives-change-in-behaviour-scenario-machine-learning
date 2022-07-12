@@ -3,6 +3,7 @@ source("../Framework/Constants.r", local = const <- new.env())
 source("../Framework/FileOperations.r", local = fileOperations <- new.env())
 source("../Framework/Transactions.r", local = transactions <- new.env())
 source("../Framework/PreviousAverageActivity.r", local = snroPAA <- new.env())
+source("../Framework/Highlight.r", local = hlt <- new.env())
 
 # Libraries
 library(lubridate)
@@ -97,7 +98,23 @@ alertGeneration <- function() {
     }    
 }
 
+displayAlertsHighlights <- function() {
+    if(nrow(alertsGenerated) > 0) {
+        cat("---------- Alerts Generated ----------\n")
+        print(alertsGenerated)
+        cat("\n\n\n")
+        cat("---------- Highlights Generated ----------\n")
+        print(hlt$generateHighlight(alertsGenerated))
+        cat("\n\n\n")
+    }
+}
+
+alertsGenerateNameChange <- function() {
+    names(alertsGenerated) <<- c("Date", "AccountNumber", "InBound", "Amount")
+}
+
 readData()
 avgMonthlyCreditTransactionAmount(transactionData)
 alertGeneration()
-showOutput()
+alertsGenerateNameChange()
+displayAlertsHighlights()
