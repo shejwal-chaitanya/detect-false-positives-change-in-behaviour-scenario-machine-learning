@@ -1,4 +1,18 @@
+# Adding necessary libraries
+library(lubridate)
+
 # Calculates necessary amounts and values and runs checks for alert generation
+
+generateAlert <- function(accountNumber, inBound, amount, date) {
+    alertDataFrame <- data.frame(
+        Date <- date,
+        AccountNumber <- accountNumber,
+        InBound <- inBound,
+        Amount <- amount
+    )
+    return(alertDataFrame)
+}
+
 alertGenerator <- function(accountNumber, inBoundType, inBound, configData) {
     # Calculation of necessary amounts
     # Get Aggregate For Current Month Transactions For Given InBound Type
@@ -25,27 +39,27 @@ alertGenerator <- function(accountNumber, inBoundType, inBound, configData) {
     # Mulitiplied Average Amount with Minimum Percentage Increase
     mulAvgAmountMinPercentageIncrease <- avgAmount * (configData$MinPercentageIncrease/100)
 
+    # Min Open Days Match
+    accountOpenDateMatch <- (accountOpenDate) <= (Sys.Date() - configData$MinOpenDays)
+    
+    # Agg Amount - Avg Amount >= SD x Min(SD)
+    diffAggAvgGreaterProductSdMinMatch <- diffAggAvg >= mulStdDevMinSd
 
-    if (accountOpenDate <= (Sys.Date() - configData$MinOpenDays)) {
-        alertsGenerated <<- append(alertsGenerated, "Minimum Open Days Alert")
-    }
-        
-    if (diffAggAvg >= mulStdDevMinSd) {
-        alertsGenerated <<- append(alertsGenerated, "Agg Amount - Avg Amount >= SD x Min(SD)")
-    }
+    # Agg Amount - Avg Amount <= SD x Max(SD)
+    diffAggAvgLesserProductSdMaxMatch <- diffAggAvg <= mulStdDevMaxSd
+    
+    # Avg amount exceeds minimum current month amount
+    averageAmountExceedsMinCurrentAmountMatch <- aggCurrentMonthTransactions >= configData$MinCurrentMonthAmt
 
-    if (diffAggAvg <= mulStdDevMaxSd) {
-        alertsGenerated <<- append(alertsGenerated, "Agg Amount - Avg Amount <= SD x Max(SD)")
-    }
+    # (aggCurrentMonthTransactions - avgAmount) >= Product of Average Amount with Minimum Percentage Increase
+    diffAggAvgGreaterProductAvgAmountMicPercentageIncrease <- diffAggAvg >= mulAvgAmountMinPercentageIncrease
 
-    if (aggCurrentMonthTransactions >= configData$MinCurrentMonthAmt) {
-        alertsGenerated <<- append(alertsGenerated, "Avg amount exceeds minimum current month amount")
+    if (accountOpenDateMatch & diffAggAvgGreaterProductSdMinMatch & diffAggAvgLesserProductSdMaxMatch & averageAmountExceedsMinCurrentAmountMatch & diffAggAvgGreaterProductAvgAmountMicPercentageIncrease) {
+        alertGenerate <- generateAlert(accountNumber, inBound, aggCurrentMonthTransactions, today())
+        return(alertGenerate)
+    } else {
+        return(data.frame())
     }
-
-    if (diffAggAvg >= mulAvgAmountMinPercentageIncrease) {
-        alertsGenerated <<- append(alertsGenerated, "Last Condition")
-    }
-    return(alertsGenerated)
 }
 
 getAggregateCurrentMonthsTransaction <- function(data, accountNumber, inBoundType) {

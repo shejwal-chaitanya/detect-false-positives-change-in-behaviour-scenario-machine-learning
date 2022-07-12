@@ -9,11 +9,21 @@ library(lubridate)
 library(dplyr)
 
 # Global variables
-alertsGenerated <<- c()
+alertsGenerated <<- data.frame(
+    Date <- lubridate::Date(),
+    AccountNumber <- integer(),
+    InBound <- logical(),
+    Amount <- double()
+)
+
 gbAccountNumber <<- c()
 gbAvgAmount <<- c()
 gbInBound <<- c()
-avgMonthlyCreditDebitTransaction <<- data.frame(gbAccountNumber, gbAvgAmount, gbInBound)
+avgMonthlyCreditDebitTransaction <<- data.frame(
+    gbAccountNumber <- integer(), 
+    gbAvgAmount <- double(), 
+    gbInBound <- character()
+)
 
 # Data Extraction
 readData <- function() {
@@ -59,9 +69,7 @@ avgMonthlyCreditTransactionAmount <- function(data) {
 }
 
 showOutput <- function(accountNumber) {
-    cat("Alerts Generated For AccountNumber - ", accountNumber, "\n")
     print(alertsGenerated)
-    alertsGenerated <<- c()
 }
 
 alertGeneration <- function() {
@@ -71,14 +79,20 @@ alertGeneration <- function() {
         
         # Generate Alerts for Credit Transactions
         if(nrow(subset(transactionData, transactionData$AccountNumber == accountNumber & transactionData$InBound %in% const$inBoundCreditType) >= 1)) {
-            alertsGenerated <- append(alertsGenerated, snroPAA$alertGenerator(accountNumber, const$inBoundCreditType, const$inBoundCredit, configData))
-            showOutput(accountNumber)
+            checkForAlert <- snroPAA$alertGenerator(accountNumber, const$inBoundCreditType, const$inBoundCredit, configData)
+            if (nrow(checkForAlert) > 0) {
+                # Alert generated added to the dataframe
+                alertsGenerated <<- rbind(alertsGenerated, checkForAlert)
+            }
         }
 
         # Generate Alerts for Debit Transaction
         if(nrow(subset(transactionData, transactionData$AccountNumber == accountNumber & transactionData$InBound %in% const$inBoundDebitType) >= 1)) {
-            alertsGenerated <- append(alertsGenerated, snroPAA$alertGenerator(accountNumber, const$inBoundDebitType, const$inBoundDebit, configData))
-            showOutput(accountNumber)
+            checkForAlert <- snroPAA$alertGenerator(accountNumber, const$inBoundDebitType, const$inBoundDebit, configData)
+            if (nrow(checkForAlert) > 0) {
+                # Alert generated added to the dataframe
+                alertsGenerated <<- rbind(alertsGenerated, checkForAlert)
+            }
         }
     }    
 }
@@ -86,3 +100,4 @@ alertGeneration <- function() {
 readData()
 avgMonthlyCreditTransactionAmount(transactionData)
 alertGeneration()
+showOutput()
