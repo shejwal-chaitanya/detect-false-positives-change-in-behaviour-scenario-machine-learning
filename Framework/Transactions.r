@@ -1,3 +1,6 @@
+# Libraries
+library(lubridate)
+
 # Returns the last date of the previous month
 getLastDateOfPreviousMonth <- function(latestDate) {
     #Get last date of previous month
@@ -40,4 +43,80 @@ calculateAvgMonthlyTransaction <- function(data, inBound, configData) {
         avgAmount <- (getTotalAmount(data) / getNumberOfMonthsWithNoActivity(data))
     }
     return(avgAmount)
+}
+
+# Returns the last date of the month
+getCeilingDate <- function(date) {
+    return(ceiling_date(date, "months") - 1)
+}
+
+# Generates a dataframe based on account details
+generateAccountDetails <- function(AverageAmount = 0, StandardDeviation = 0, dataFound = F) {
+    result <- list(dataFound, data.frame())
+    if(dataFound) {
+        accountDetails <- data.frame(
+            AverageAmount <- AverageAmount,
+            StandardDeviation <- StandardDeviation
+        )
+        names(accountDetails) <- c("AverageAmount", "StandardDeviation")
+        result <- list(dataFound, accountDetails)
+    }
+    names(result) <- c("DataFound", "AccountDetails")
+    return(result)
+}
+
+# Get standard deviation
+getStdDev <- function(data, mean, days, from, to) {
+    difference <- c()
+    while(from <= to) {
+        amountData <- subset(data, data$Date == from)
+        if (nrow(amountData) > 0) {
+            difference <- append(difference, (sum(amountData$Amount) - mean) ^ 2)
+        } else {
+            difference <- append(difference, (-mean) ^ 2)
+        }
+        from <- from + days(1)
+    }
+    return(sqrt(sum(difference) / days))
+}
+
+# Get average amount for every month in the last 1 year
+# Return type is dataframe
+getAvgAmountEveryMonth <- function(accountNumber, inBoundType, data) {
+    accountData <- subset(data, (data$AccountNumber == accountNumber) & (data$InBound == inBoundType))
+    if(nrow(accountData) > 0) {
+
+        # Initialize
+        AverageAmount <- c()
+        StandardDeviation <- c()
+
+        # Get last date of the previous month
+        end_date <- floor_date(Sys.Date(), "months") - 1
+
+        # ceiling_date returns the first date of the next month
+        from_date <- ceiling_date(end_date - years(1), "months")
+
+        while (getCeilingDate(from_date) <= end_date) {
+
+            to_date <- getCeilingDate(from_date)
+            monthlyAmountData <- subset(accountData, accountData$Date >= from_date & accountData$Date <= to_date)
+            lastDateOfMonth <- day(to_date)
+            # Calculate the average amount and append to the vector
+            if (nrow(monthlyAmountData) >= 1) {
+                avg <- sum(monthlyAmountData$Amount) / lastDateOfMonth
+                AverageAmount <- append(AverageAmount, avg)
+                StandardDeviation <- append(StandardDeviation, getStdDev(monthlyAmountData, avg, lastDateOfMonth, from_date, to_date))
+            } else {
+                AverageAmount <- append(AverageAmount, 0)
+                StandardDeviation <- append(StandardDeviation, 0)
+            }
+
+            # Resetting from date
+            from_date <- from_date + months(1)
+        }
+        # Generate result
+        return(generateAccountDetails(AverageAmount, StandardDeviation, T))
+    } else {
+        return(generateAccountDetails())
+    }
 }
