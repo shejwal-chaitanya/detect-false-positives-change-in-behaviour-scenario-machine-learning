@@ -83,7 +83,7 @@ alertGeneration <- function() {
         if(nrow(subset(transactionData, transactionData$AccountNumber == accountNumber & transactionData$InBound %in% const$inBoundCreditType) >= 1)) {
             result <- transactions$getAccountDetails(accountNumber, "TRUE", transactionData)
             hcResult <- fp$hierarchicalClustering(accountNumber, result$AccountDetails, configData, const$inBoundCreditType)
-            print(result)
+            print(hcResult)
             checkForAlert <- snroPAA$alertGenerator(accountNumber, const$inBoundCreditType, const$inBoundCredit, configData)
             if (nrow(checkForAlert) > 0) {
                 # Alert generated added to the dataframe

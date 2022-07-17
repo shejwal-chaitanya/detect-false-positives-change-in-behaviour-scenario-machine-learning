@@ -23,7 +23,7 @@ generateTestDataFrame <- function(accountNumber, inBoundType) {
 
 generateAbormalBehaviourData <- function(data, configData) {
     abnormalData <- subset(data, data$AverageAmount > 0 & data$StandardDeviation > 0)
-    abnormalData$AverageAmount = abnormalData$AverageAmount * (configData$MinPercentageIncrease / 100)
+    abnormalData$AmountTransacted = abnormalData$AmountTransacted * (configData$MinPercentageIncrease / 100)
     abnormalData$StandardDeviation = abnormalData$StandardDeviation * configData$MaxNumberSD
     abnormalData$Status = "Abnormal"
     data <- rbind(data, abnormalData)
@@ -65,9 +65,6 @@ hierarchicalClustering <- function(accountNumber, data, configData, inBoundType)
 
     # Current data prediction
     predictedBehaviour <- knn(train = data, test = currentData$AccountDetails[1], k = 1, cl = groups)
-
-    # Behaviour output
-    hcModel$labels[predictedBehaviour]
 
     return(hcModel$labels[predictedBehaviour])
 }
