@@ -41,9 +41,6 @@ hierarchicalClustering <- function(accountNumber, data, configData, inBoundType)
     # Generate cluster based on amount only
     data <- data[1]
 
-    print(data)
-    print(currentData)
-
     # Scale the data
     scaledData <- scale(data)
 

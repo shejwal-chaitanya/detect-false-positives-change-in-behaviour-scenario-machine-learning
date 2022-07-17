@@ -81,7 +81,7 @@ alertGeneration <- function() {
         
         # Generate Alerts for Credit Transactions
         if(nrow(subset(transactionData, transactionData$AccountNumber == accountNumber & transactionData$InBound %in% const$inBoundCreditType) >= 1)) {
-            result <- transactions$getAvgAmountEveryMonth(accountNumber, "TRUE", transactionData)
+            result <- transactions$getAccountDetails(accountNumber, "TRUE", transactionData)
             hcResult <- fp$hierarchicalClustering(accountNumber, result$AccountDetails, configData, const$inBoundCreditType)
             print(hcResult)
             checkForAlert <- snroPAA$alertGenerator(accountNumber, const$inBoundCreditType, const$inBoundCredit, configData)

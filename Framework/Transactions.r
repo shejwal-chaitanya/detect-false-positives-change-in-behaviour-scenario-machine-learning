@@ -83,7 +83,7 @@ getStdDev <- function(data, mean, days, from, to) {
 
 # Get average amount for every month in the last 1 year
 # Return type is dataframe
-getAvgAmountEveryMonth <- function(accountNumber, inBoundType, data) {
+getAccountDetails <- function(accountNumber, inBoundType, data) {
     accountData <- subset(data, (data$AccountNumber == accountNumber) & (data$InBound == inBoundType))
     if(nrow(accountData) > 0) {
 
