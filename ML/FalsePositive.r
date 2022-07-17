@@ -25,7 +25,7 @@ generateAbormalBehaviourData <- function(data, configData) {
     abnormalData <- subset(data, data$AverageAmount > 0 & data$StandardDeviation > 0)
     abnormalData$AverageAmount = abnormalData$AverageAmount * (configData$MinPercentageIncrease / 100)
     abnormalData$StandardDeviation = abnormalData$StandardDeviation * configData$MaxNumberSD
-
+    abnormalData$Status = "Abnormal"
     data <- rbind(data, abnormalData)
     return(data)
 }

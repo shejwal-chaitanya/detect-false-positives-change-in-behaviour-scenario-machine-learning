@@ -51,15 +51,16 @@ getCeilingDate <- function(date) {
 }
 
 # Generates a dataframe based on account details
-generateAccountDetails <- function(AverageAmount = 0, StandardDeviation = 0, dataFound = F, AmountTransacted = 0) {
+generateAccountDetails <- function(AverageAmount = 0, StandardDeviation = 0, dataFound = F, AmountTransacted = 0, Status = "Normal") {
     result <- list(dataFound, data.frame())
     if(dataFound) {
         accountDetails <- data.frame(
             AmountTransacted <- AmountTransacted,
             AverageAmount <- AverageAmount,
-            StandardDeviation <- StandardDeviation
+            StandardDeviation <- StandardDeviation,
+            Status <- Status
         )
-        names(accountDetails) <- c("AmountTransacted", "AverageAmount", "StandardDeviation")
+        names(accountDetails) <- c("AmountTransacted", "AverageAmount", "StandardDeviation", "Status")
         result <- list(dataFound, accountDetails)
     }
     names(result) <- c("DataFound", "AccountDetails")
@@ -91,6 +92,7 @@ getAccountDetails <- function(accountNumber, inBoundType, data) {
         AmountTransacted <- c()
         AverageAmount <- c()
         StandardDeviation <- c()
+        Status <- c()
 
         # Get last date of the previous month
         end_date <- floor_date(Sys.Date(), "months") - 1
@@ -109,17 +111,19 @@ getAccountDetails <- function(accountNumber, inBoundType, data) {
                 AmountTransacted <- append(AmountTransacted, sum(monthlyAmountData$Amount))
                 AverageAmount <- append(AverageAmount, avg)
                 StandardDeviation <- append(StandardDeviation, getStdDev(monthlyAmountData, avg, lastDateOfMonth, from_date, to_date))
+                Status <- append(Status, "Normal")
             } else {
                 AmountTransacted <- append(AmountTransacted, 0)
                 AverageAmount <- append(AverageAmount, 0)
                 StandardDeviation <- append(StandardDeviation, 0)
+                Status <- append(Status, "Normal")
             }
 
             # Resetting from date
             from_date <- from_date + months(1)
         }
         # Generate result
-        return(generateAccountDetails(AverageAmount, StandardDeviation, T, AmountTransacted))
+        return(generateAccountDetails(AverageAmount, StandardDeviation, T, AmountTransacted, Status))
     } else {
         return(generateAccountDetails())
     }
