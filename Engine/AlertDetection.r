@@ -4,6 +4,7 @@ source("../Framework/FileOperations.r", local = fileOperations <- new.env())
 source("../Framework/Transactions.r", local = transactions <- new.env())
 source("../Framework/PreviousAverageActivity.r", local = snroPAA <- new.env())
 source("../Framework/Highlight.r", local = hlt <- new.env())
+source("../ML/FalsePositive.r", local = fp <- new.env())
 
 # Libraries
 library(lubridate)
@@ -80,6 +81,9 @@ alertGeneration <- function() {
         
         # Generate Alerts for Credit Transactions
         if(nrow(subset(transactionData, transactionData$AccountNumber == accountNumber & transactionData$InBound %in% const$inBoundCreditType) >= 1)) {
+            result <- transactions$getAvgAmountEveryMonth(accountNumber, "TRUE", transactionData)
+            hcResult <- fp$hierarchicalClustering(accountNumber, result$AccountDetails, configData, const$inBoundCreditType)
+            print(hcResult)
             checkForAlert <- snroPAA$alertGenerator(accountNumber, const$inBoundCreditType, const$inBoundCredit, configData)
             if (nrow(checkForAlert) > 0) {
                 # Alert generated added to the dataframe
@@ -118,4 +122,3 @@ avgMonthlyCreditTransactionAmount(transactionData)
 alertGeneration()
 alertsGenerateNameChange()
 displayAlertsHighlights()
-print(transactions$getAvgAmountEveryMonth(1234, "TRUE", transactionData))

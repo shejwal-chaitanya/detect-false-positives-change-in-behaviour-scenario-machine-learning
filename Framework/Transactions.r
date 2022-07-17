@@ -51,14 +51,15 @@ getCeilingDate <- function(date) {
 }
 
 # Generates a dataframe based on account details
-generateAccountDetails <- function(AverageAmount = 0, StandardDeviation = 0, dataFound = F) {
+generateAccountDetails <- function(AverageAmount = 0, StandardDeviation = 0, dataFound = F, AmountTransacted = 0) {
     result <- list(dataFound, data.frame())
     if(dataFound) {
         accountDetails <- data.frame(
+            AmountTransacted <- AmountTransacted,
             AverageAmount <- AverageAmount,
             StandardDeviation <- StandardDeviation
         )
-        names(accountDetails) <- c("AverageAmount", "StandardDeviation")
+        names(accountDetails) <- c("AmountTransacted", "AverageAmount", "StandardDeviation")
         result <- list(dataFound, accountDetails)
     }
     names(result) <- c("DataFound", "AccountDetails")
@@ -87,6 +88,7 @@ getAvgAmountEveryMonth <- function(accountNumber, inBoundType, data) {
     if(nrow(accountData) > 0) {
 
         # Initialize
+        AmountTransacted <- c()
         AverageAmount <- c()
         StandardDeviation <- c()
 
@@ -104,9 +106,11 @@ getAvgAmountEveryMonth <- function(accountNumber, inBoundType, data) {
             # Calculate the average amount and append to the vector
             if (nrow(monthlyAmountData) >= 1) {
                 avg <- sum(monthlyAmountData$Amount) / lastDateOfMonth
+                AmountTransacted <- append(AmountTransacted, sum(monthlyAmountData$Amount))
                 AverageAmount <- append(AverageAmount, avg)
                 StandardDeviation <- append(StandardDeviation, getStdDev(monthlyAmountData, avg, lastDateOfMonth, from_date, to_date))
             } else {
+                AmountTransacted <- append(AmountTransacted, 0)
                 AverageAmount <- append(AverageAmount, 0)
                 StandardDeviation <- append(StandardDeviation, 0)
             }
@@ -115,7 +119,7 @@ getAvgAmountEveryMonth <- function(accountNumber, inBoundType, data) {
             from_date <- from_date + months(1)
         }
         # Generate result
-        return(generateAccountDetails(AverageAmount, StandardDeviation, T))
+        return(generateAccountDetails(AverageAmount, StandardDeviation, T, AmountTransacted))
     } else {
         return(generateAccountDetails())
     }
