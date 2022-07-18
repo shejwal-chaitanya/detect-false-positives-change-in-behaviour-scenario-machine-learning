@@ -51,8 +51,8 @@ getCeilingDate <- function(date) {
 }
 
 # Generates a dataframe based on account details
-generateAccountDetails <- function(AverageAmount = 0, StandardDeviation = 0, dataFound = F, AmountTransacted = 0, Status = "Normal") {
-    result <- list(dataFound, data.frame())
+generateAccountDetails <- function(AverageAmount = 0, StandardDeviation = 0, dataFound = F, AmountTransacted = 0, Status = "Normal", EntireAccountHistory = NULL) {
+    result <- list(dataFound, data.frame(), data.frame())
     if(dataFound) {
         accountDetails <- data.frame(
             AmountTransacted <- AmountTransacted,
@@ -61,9 +61,9 @@ generateAccountDetails <- function(AverageAmount = 0, StandardDeviation = 0, dat
             Status <- Status
         )
         names(accountDetails) <- c("AmountTransacted", "AverageAmount", "StandardDeviation", "Status")
-        result <- list(dataFound, accountDetails)
+        result <- list(dataFound, accountDetails, EntireAccountHistory)
     }
-    names(result) <- c("DataFound", "AccountDetails")
+    names(result) <- c("DataFound", "AccountDetails", "EntireAccountHistory")
     return(result)
 }
 
@@ -80,6 +80,13 @@ getStdDev <- function(data, mean, days, from, to) {
         from <- from + days(1)
     }
     return(sqrt(sum(difference) / days))
+}
+
+# Returns entire account history
+getEntireAccountHistory <- function(accountData, end_date, from_date) {
+    accHistory <- subset(accountData, accountData$Date <= end_date & accountData$Date >= from_date)
+    accHistory$Status <- "Normal"
+    return(accHistory)
 }
 
 # Get average amount for every month in the last 1 year
@@ -99,6 +106,9 @@ getAccountDetails <- function(accountNumber, inBoundType, data) {
 
         # ceiling_date returns the first date of the next month
         from_date <- ceiling_date(end_date - years(1), "months")
+
+        # Get entire data
+        EntireAccountHistory <- getEntireAccountHistory(accountData, end_date, from_date)
 
         while (getCeilingDate(from_date) <= end_date) {
 
@@ -123,7 +133,7 @@ getAccountDetails <- function(accountNumber, inBoundType, data) {
             from_date <- from_date + months(1)
         }
         # Generate result
-        return(generateAccountDetails(AverageAmount, StandardDeviation, T, AmountTransacted, Status))
+        return(generateAccountDetails(AverageAmount, StandardDeviation, T, AmountTransacted, Status, EntireAccountHistory))
     } else {
         return(generateAccountDetails())
     }

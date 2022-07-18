@@ -82,8 +82,12 @@ alertGeneration <- function() {
         # Generate Alerts for Credit Transactions
         if(nrow(subset(transactionData, transactionData$AccountNumber == accountNumber & transactionData$InBound %in% const$inBoundCreditType) >= 1)) {
             result <- transactions$getAccountDetails(accountNumber, "TRUE", transactionData)
-            hcResult <- fp$hierarchicalClustering(accountNumber, result$AccountDetails, configData, const$inBoundCreditType)
-            print(hcResult)
+            # Generate abnormal data behaviour according to configuration
+            result <- fp$generateAbormalBehaviourData(result, configData)
+            # Run the data against hierarchical clustering
+            hcResult <- fp$hierarchicalClustering(accountNumber, result$EntireAccountHistory["Amount"], configData, const$inBoundCreditType)
+            # Run the data against support vector machine
+            fp$supportVectorMachine(result$AccountDetails, configData)
             checkForAlert <- snroPAA$alertGenerator(accountNumber, const$inBoundCreditType, const$inBoundCredit, configData)
             if (nrow(checkForAlert) > 0) {
                 # Alert generated added to the dataframe

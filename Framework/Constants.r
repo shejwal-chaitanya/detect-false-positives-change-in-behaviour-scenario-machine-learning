@@ -1,8 +1,8 @@
 yes <- "Y"
 no <- "N"
 inBoundCreditType <- c("T", "t", "TRUE", "True", "true", TRUE)
-inBoundCredit <- "T"
+inBoundCredit <- "TRUE"
 inBoundDebitType <- c("F", "f", "FALSE", "False", "false", FALSE)
-inBoundDebit <- "F"
+inBoundDebit <- "FALSE"
 # Daily = "D", Monthly = "M", Weekly = "W", Yearly = "Y"
 monthlyFrequency <- "M"

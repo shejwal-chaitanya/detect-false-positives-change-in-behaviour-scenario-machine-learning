@@ -4,9 +4,14 @@
 
 library(lubridate)
 
-#dummyData <- data.frame(
-#    TransactionDate <- lubridate::Date(),
-#    AccountNumber <- integer(),
-#    Amount <- double(),
-#    AverageAmount <- 
-#)
+dummyDates <- seq(as.Date("2022-03-01"), as.Date("2022-04-30"), by = 1)
+dummyAmount <- rnorm(61, mean = 20000, sd = 3000)
+dummyData <- data.frame(
+    Date <- seq(as.Date("2022-03-01"), as.Date("2022-04-30"), by = 1),
+    AccountNumber <- 1234,
+    Amount <- rnorm(61, mean = 15000, sd = 3000),
+    InBound <- T
+)
+names(dummyData) <- c("Date","AccountNumber","Amount","InBound")
+print(dummyData)
+write.csv(dummyData, "dummyData.csv", row.names = F)
