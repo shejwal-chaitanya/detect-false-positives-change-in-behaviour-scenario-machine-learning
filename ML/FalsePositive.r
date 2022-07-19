@@ -3,6 +3,8 @@ library(class)
 library(scorecard)
 library(caTools)
 library(e1071)
+library(randomForest)
+library(dplyr)
 
 source("../Framework/PreviousAverageActivity.r", local = snroPAA <- new.env())
 source("../Framework/Transactions.r", local = transactions <- new.env())
@@ -101,7 +103,7 @@ supportVectorMachine <- function(data,configData) {
     test <- subset(data, sample == FALSE)
 
     # Tune model
-    #tunedModel <- tune(svm, Status ~., data = train, kernel = "linear", ranges = list(cost = c(0.001, 0.01, 0.1, 1, 10, 100)))
+    # tunedModel <- tune(svm, Status ~., data = train, kernel = "linear", ranges = list(cost = c(0.001, 0.01, 0.1, 1, 10, 100)))
 
     #summary(tunedModel)
     # Model generation
@@ -116,4 +118,42 @@ supportVectorMachine <- function(data,configData) {
     # Current data prediction with the model
     currentData <- generateTestDataFrame(1234, "TRUE")
     print(predict(svmModel, currentData$AccountDetails, type = "response"))
+}
+
+randomForest <- function(accountNumber, inBound, alertData) {
+    # Set Environment variables
+    Sys.setenv(JAVA_HOME = "C:\\Program Files\\Java\\jdk-18.0.1.1")
+
+    # Import data for the given account number and inbound type
+    data <- read.csv("../Data/FalsePositiveRecords.csv")
+
+    # Retrieving data for the given acc number and inbound type
+    data <- subset(data, data$AccountNumber == accountNumber & data$InBound == inBound)
+
+    if (nrow(data) > 0) {
+        # Converting FP to factors as it is our output and categorical variable
+        data$FP <- as.factor(data$FP)
+
+        # Creating training and testing dataset
+        split <- caTools:sample.split(data, SplitRatio = 0.7)
+        train <- subset(data, split == TRUE)
+        test <- subset(data, split == FALSE)
+
+        # Generating random forest model
+        rdModel <- randomForest(FP ~., data = train, mtry = 4, ntree = 2000, importance = TRUE)
+
+        # plot model
+        plot(rfModel)
+
+        # Prediction
+        result <- as.vector(predcit(rdModel, select(alertData, -c("AccountNumber", "InBound"))))
+
+        if (result == "1") {
+            return("FP")
+        } else {
+            return("NFP")
+        }
+    } else {
+        return("No Data")
+    }
 }

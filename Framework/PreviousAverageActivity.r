@@ -1,6 +1,9 @@
 # Adding necessary libraries
 library(lubridate)
 
+# File imports
+# source("../ML/FalsePositive.r", local = fps <- new.env())
+
 # Calculates necessary amounts and values and runs checks for alert generation
 
 generateAlert <- function(accountNumber, inBound, amount, date) {
@@ -13,7 +16,26 @@ generateAlert <- function(accountNumber, inBound, amount, date) {
     return(alertDataFrame)
 }
 
-alertGenerator <- function(accountNumber, inBoundType, inBound, configData) {
+generateTestDataFrameRandomForest <- function(accountNumber, inBound, diffAggAvg, mulStdDevMinSd, mulStdDevMaxSd, aggCurrentMonthTransactions, mulAvgAmountMinPercentageIncrease, result) {
+    output <- data.frame(
+        AccountNumber <- accountNumber,
+        InBound <- inBound,
+        DiffAggAvg <- diffAggAvg,
+        MinSd <- mulStdDevMinSd,
+        MaxSd <- mulStdDevMaxSd,
+        AggAmount <- aggCurrentMonthTransactions,
+        AvgAmountPercentageIncrease <- mulAvgAmountMinPercentageIncrease,
+        FP <- ifelse(result == TRUE, 1, 0)
+    )
+    names(output) <- c("AccountNumber", "InBound","DiffAggAvg", "MinSd", "MaxSd", "AggAmount", "AvgAmountPercentageIncrease", "FP")
+    return(output)
+}
+
+storeAlertGeneratorResults <- function(output) {
+    write.table(output, file = "../Data/FalsePositiveRecords.csv", append = TRUE, col.names = FALSE, row.names = FALSE, sep = ",", quote = FALSE)
+}
+
+alertGenerator <- function(accountNumber, inBoundType, inBound, configData, fpObject) {
     # Calculation of necessary amounts
     # Get Aggregate For Current Month Transactions For Given InBound Type
     aggCurrentMonthTransactions <- getAggregateCurrentMonthsTransaction(transactionData, accountNumber, inBoundType)
@@ -54,10 +76,28 @@ alertGenerator <- function(accountNumber, inBoundType, inBound, configData) {
     # (aggCurrentMonthTransactions - avgAmount) >= Product of Average Amount with Minimum Percentage Increase
     diffAggAvgGreaterProductAvgAmountMicPercentageIncrease <- diffAggAvg >= mulAvgAmountMinPercentageIncrease
 
+    alertData <- generateTestDataFrameRandomForest(accountNumber, inBound, diffAggAvg, mulStdDevMinSd, mulStdDevMaxSd, aggCurrentMonthTransactions, mulAvgAmountMinPercentageIncrease, TRUE)
+
     if (accountOpenDateMatch & diffAggAvgGreaterProductSdMinMatch & diffAggAvgLesserProductSdMaxMatch & averageAmountExceedsMinCurrentAmountMatch & diffAggAvgGreaterProductAvgAmountMicPercentageIncrease) {
+
+        # Re-run using random forest
+        # If output of random forest signifies that its FP, then send to supervisor, else to analyst
+        randomForestOutput <- fpObject$randomForest(accountNumber, inBound, alertData)
+        if (randomForestOutput == "FP") {
+            cat("Random Forest evaluation -\n", "Is False Positive - TRUE\n", "Sent to Supervisor\n")
+            storeAlertGeneratorResults(alertData)
+        } else if (randomForestOutput == "NFP") {
+            cat("Random Forest evaluation -\n", "Is False Positive - TRUE\n", "Sent to Supervisor\n")
+            storeAlertGeneratorResults(alertData)
+        } else {
+            cat(paste("Data not found for account number", accountNumber, "with InBound Type:", inBound))
+        }
         alertGenerate <- generateAlert(accountNumber, inBound, aggCurrentMonthTransactions, today())
+
         return(alertGenerate)
     } else {
+        cat("Random Forest evaluation -\n", "Is False Positive - FALSE\n")
+        storeAlertGeneratorResults(alertData)
         return(data.frame())
     }
 }

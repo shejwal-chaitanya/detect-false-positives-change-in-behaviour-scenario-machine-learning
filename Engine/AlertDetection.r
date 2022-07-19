@@ -88,7 +88,7 @@ alertGeneration <- function() {
             hcResult <- fp$hierarchicalClustering(accountNumber, result$EntireAccountHistory["Amount"], configData, const$inBoundCreditType)
             # Run the data against support vector machine
             fp$supportVectorMachine(result$AccountDetails, configData)
-            checkForAlert <- snroPAA$alertGenerator(accountNumber, const$inBoundCreditType, const$inBoundCredit, configData)
+            checkForAlert <- snroPAA$alertGenerator(accountNumber, const$inBoundCreditType, const$inBoundCredit, configData, fp)
             if (nrow(checkForAlert) > 0) {
                 # Alert generated added to the dataframe
                 alertsGenerated <<- rbind(alertsGenerated, checkForAlert)
