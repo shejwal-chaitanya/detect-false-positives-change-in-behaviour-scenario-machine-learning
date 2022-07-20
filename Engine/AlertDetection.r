@@ -84,13 +84,17 @@ alertGeneration <- function() {
             result <- transactions$getAccountDetails(accountNumber, const$inBoundCredit, transactionData)
             # Generate abnormal data behaviour according to configuration
             result <- fp$generateAbormalBehaviourData(result, configData)
+            cat(const$lineBreaker)
+            cat("Credit Transaction Results for AccountNumber -", accountNumber, "\n")
             # Run the data against hierarchical clustering
             hcResult <- fp$hierarchicalClustering(accountNumber, result$EntireAccountHistory["Amount"], configData, const$inBoundCreditType)
+            cat("Hierarchical Clustering Output For Account Number -", accountNumber,hcResult, "\n")
             if(hcResult == const$normalBehaviour) {
                 break
             } else {
                 # Run the data against support vector machine
                 svmOutput <- fp$supportVectorMachine(result$AccountDetails, configData, accountNumber, const$inBoundCredit)
+                cat("SVM Output for Account Number - ", accountNumber, svmOutput, "\n")
                 if (svmOutput == const$normalBehaviour) {
                     break
                 } else {
@@ -101,15 +105,36 @@ alertGeneration <- function() {
                     }
                 }
             }
+            cat(const$lineBreaker)
         }
 
         # Generate Alerts for Debit Transaction
         if(nrow(subset(transactionData, transactionData$AccountNumber == accountNumber & transactionData$InBound %in% const$inBoundDebitType) >= 1)) {
-            checkForAlert <- snroPAA$alertGenerator(accountNumber, const$inBoundDebitType, const$inBoundDebit, configData)
-            if (nrow(checkForAlert) > 0) {
-                # Alert generated added to the dataframe
-                alertsGenerated <<- rbind(alertsGenerated, checkForAlert)
+            result <- transactions$getAccountDetails(accountNumber, const$inBoundDebit, transactionData)
+            # Generate abnormal data behaviour according to configuration
+            result <- fp$generateAbormalBehaviourData(result, configData)
+            cat(const$lineBreaker)
+            cat("Debit Transaction Results for AccountNumber -", accountNumber, "\n")
+            # Run the data against hierarchical clustering
+            hcResult <- fp$hierarchicalClustering(accountNumber, result$EntireAccountHistory["Amount"], configData, const$inBoundDebitType)
+            cat("Hierarchical Clustering Output For Account Number -", accountNumber, " ",  hcResult, "\n")
+            if(hcResult == const$normalBehaviour) {
+                break
+            } else {
+                # Run the data against support vector machine
+                svmOutput <- fp$supportVectorMachine(result$AccountDetails, configData, accountNumber, const$inBoundDebit)
+                cat("SVM Output for Account Number - ", accountNumber, svmOutput, "\n")
+                if (svmOutput == const$normalBehaviour) {
+                    break
+                } else {
+                    checkForAlert <- snroPAA$alertGenerator(accountNumber, const$inBoundDebitType, const$inBoundDebit, configData)
+                    if (nrow(checkForAlert) > 0) {
+                        # Alert generated added to the dataframe
+                        alertsGenerated <<- rbind(alertsGenerated, checkForAlert)
+                    }
+                }
             }
+            cat(const$lineBreaker)
         }
     }    
 }

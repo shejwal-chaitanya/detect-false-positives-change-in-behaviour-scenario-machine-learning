@@ -91,6 +91,7 @@ alertGenerator <- function(accountNumber, inBoundType, inBound, configData, fpOb
             storeAlertGeneratorResults(alertData)
         } else {
             cat(paste("Data not found for account number", accountNumber, "with InBound Type:", inBound))
+            storeAlertGeneratorResults(alertData)
         }
         alertGenerate <- generateAlert(accountNumber, inBound, aggCurrentMonthTransactions, today())
 
