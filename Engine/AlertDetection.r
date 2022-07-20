@@ -81,17 +81,25 @@ alertGeneration <- function() {
         
         # Generate Alerts for Credit Transactions
         if(nrow(subset(transactionData, transactionData$AccountNumber == accountNumber & transactionData$InBound %in% const$inBoundCreditType) >= 1)) {
-            result <- transactions$getAccountDetails(accountNumber, "TRUE", transactionData)
+            result <- transactions$getAccountDetails(accountNumber, const$inBoundCredit, transactionData)
             # Generate abnormal data behaviour according to configuration
             result <- fp$generateAbormalBehaviourData(result, configData)
             # Run the data against hierarchical clustering
             hcResult <- fp$hierarchicalClustering(accountNumber, result$EntireAccountHistory["Amount"], configData, const$inBoundCreditType)
-            # Run the data against support vector machine
-            fp$supportVectorMachine(result$AccountDetails, configData)
-            checkForAlert <- snroPAA$alertGenerator(accountNumber, const$inBoundCreditType, const$inBoundCredit, configData, fp)
-            if (nrow(checkForAlert) > 0) {
-                # Alert generated added to the dataframe
-                alertsGenerated <<- rbind(alertsGenerated, checkForAlert)
+            if(hcResult == const$normalBehaviour) {
+                break
+            } else {
+                # Run the data against support vector machine
+                svmOutput <- fp$supportVectorMachine(result$AccountDetails, configData, accountNumber, const$inBoundCredit)
+                if (svmOutput == const$normalBehaviour) {
+                    break
+                } else {
+                    checkForAlert <- snroPAA$alertGenerator(accountNumber, const$inBoundCreditType, const$inBoundCredit, configData, fp)
+                    if (nrow(checkForAlert) > 0) {
+                        # Alert generated added to the dataframe
+                        alertsGenerated <<- rbind(alertsGenerated, checkForAlert)
+                    }
+                }
             }
         }
 

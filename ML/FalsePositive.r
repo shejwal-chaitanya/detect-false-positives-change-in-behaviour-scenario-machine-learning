@@ -6,6 +6,8 @@ library(e1071)
 library(randomForest)
 library(dplyr)
 
+# File imports
+source("../Framework/Constants.r", local = const <- new.env())
 source("../Framework/PreviousAverageActivity.r", local = snroPAA <- new.env())
 source("../Framework/Transactions.r", local = transactions <- new.env())
 
@@ -37,14 +39,14 @@ generateAbormalBehaviourData <- function(data, configData) {
 
     abnormalData["StandardDeviation"] = abnormalData["StandardDeviation"] * configData$MaxNumberSD
 
-    abnormalData["Status"] = "Abnormal"
+    abnormalData["Status"] = const$abnormalBehaviour
     
     data$AccountDetails <- rbind(data$AccountDetails, abnormalData)
 
     abnormalData <- subset(data$EntireAccountHistory, data$EntireAccountHistory["Amount"] > 0)
 
     abnormalData["Amount"] = abnormalData["Amount"] * (configData$MinPercentageIncrease / 100)
-    abnormalData["Status"] = "Abnormal"
+    abnormalData["Status"] = const$abnormalBehaviour
 
     data$EntireAccountHistory <- rbind(data$EntireAccountHistory, abnormalData)
 
@@ -69,7 +71,7 @@ hierarchicalClustering <- function(accountNumber, data, configData, inBoundType)
     hcModel <- hclust(distData, method = "complete")
 
     # Labeling data
-    hcModel$labels <- c("Normal", "Abnormal")
+    hcModel$labels <- c(const$normalBehaviour, const$abnormalBehaviour)
 
     # Cluster Groups
     # k = 2, i.e., 2 clusters, Normal and Abnormal
@@ -84,7 +86,7 @@ hierarchicalClustering <- function(accountNumber, data, configData, inBoundType)
     return(hcModel$labels[predictedBehaviour])
 }
 
-supportVectorMachine <- function(data,configData) {
+supportVectorMachine <- function(data, configData, accountNumber, inBound) {
 
     # Generate abnormal behaviour data
     # data <- generateAbormalBehaviourData(data, configData)
@@ -116,8 +118,8 @@ supportVectorMachine <- function(data,configData) {
     cat("Accuracy of the model -- ", (mean(predictedValues == test[, 3])) * 100, "%")
 
     # Current data prediction with the model
-    currentData <- generateTestDataFrame(1234, "TRUE")
-    print(predict(svmModel, currentData$AccountDetails, type = "response"))
+    currentData <- generateTestDataFrame(accountNumber, inBound)
+    return(predict(svmModel, currentData$AccountDetails, type = "response"))
 }
 
 randomForest <- function(accountNumber, inBound, alertData) {
@@ -149,11 +151,11 @@ randomForest <- function(accountNumber, inBound, alertData) {
         result <- as.vector(predcit(rdModel, select(alertData, -c("AccountNumber", "InBound"))))
 
         if (result == "1") {
-            return("FP")
+            return(const$falsePositive)
         } else {
-            return("NFP")
+            return(const$negFalsePositive)
         }
     } else {
-        return("No Data")
+        return(const$dataNotFound)
     }
 }

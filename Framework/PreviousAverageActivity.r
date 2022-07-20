@@ -2,7 +2,7 @@
 library(lubridate)
 
 # File imports
-# source("../ML/FalsePositive.r", local = fps <- new.env())
+source("../Framework/Constants.r", local = const <- new.env())
 
 # Calculates necessary amounts and values and runs checks for alert generation
 
@@ -81,12 +81,12 @@ alertGenerator <- function(accountNumber, inBoundType, inBound, configData, fpOb
     if (accountOpenDateMatch & diffAggAvgGreaterProductSdMinMatch & diffAggAvgLesserProductSdMaxMatch & averageAmountExceedsMinCurrentAmountMatch & diffAggAvgGreaterProductAvgAmountMicPercentageIncrease) {
 
         # Re-run using random forest
-        # If output of random forest signifies that its FP, then send to supervisor, else to analyst
+        # If output of random forest signifies that its FP, then send to analyst, else to supervisor
         randomForestOutput <- fpObject$randomForest(accountNumber, inBound, alertData)
-        if (randomForestOutput == "FP") {
-            cat("Random Forest evaluation -\n", "Is False Positive - TRUE\n", "Sent to Supervisor\n")
+        if (randomForestOutput == const$falsePositive) {
+            cat("Random Forest evaluation -\n", "Is False Positive - TRUE\n", "Sent to Analyst\n")
             storeAlertGeneratorResults(alertData)
-        } else if (randomForestOutput == "NFP") {
+        } else if (randomForestOutput == const$negFalsePositive) {
             cat("Random Forest evaluation -\n", "Is False Positive - TRUE\n", "Sent to Supervisor\n")
             storeAlertGeneratorResults(alertData)
         } else {
