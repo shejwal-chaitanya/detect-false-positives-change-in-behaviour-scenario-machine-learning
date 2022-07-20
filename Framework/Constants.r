@@ -12,4 +12,4 @@ dataNotFound <- "No data"
 # Daily = "D", Monthly = "M", Weekly = "W", Yearly = "Y"
 monthlyFrequency <- "M"
 # Line breakers
-lineBreaker = "\n\n\n-------------------------\n\n\n"
+lineBreaker = "-------------------------\n"

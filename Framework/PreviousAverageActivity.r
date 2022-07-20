@@ -97,7 +97,7 @@ alertGenerator <- function(accountNumber, inBoundType, inBound, configData, fpOb
 
         return(alertGenerate)
     } else {
-        cat("Random Forest evaluation -\n", "Is False Positive - FALSE\n")
+        cat("Random Forest evaluation -", "Is False Positive - FALSE\n")
         storeAlertGeneratorResults(alertData)
         return(data.frame())
     }
