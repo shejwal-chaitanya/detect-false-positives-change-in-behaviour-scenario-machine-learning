@@ -119,7 +119,8 @@ supportVectorMachine <- function(data, configData, accountNumber, inBound) {
     cat("Accuracy of the SVM model -- ", (mean(predictedValues == test[, 3])) * 100, "%\n")
     # Current data prediction with the model
     currentData <- generateTestDataFrame(accountNumber, inBound)
-    return(predict(svmModel, currentData$AccountDetails, type = "response"))
+    svmOutput <- predict(svmModel, currentData$AccountDetails, type = "response")
+    return(svmOutput)
 }
 
 randomForest <- function(accountNumber, inBound, alertData) {

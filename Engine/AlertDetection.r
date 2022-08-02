@@ -94,13 +94,9 @@ alertGeneration <- function() {
             } else {
                 # Run the data against support vector machine
                 svmOutput <- fp$supportVectorMachine(result$AccountDetails, configData, accountNumber, const$inBoundCredit)
-                if (svmOutput == "1") {
-                    svmOutput <- "Abnormal"
-                } else {
-                    svmOutput <- "Normal"
-                }
-                cat("SVM Behaviour Output for Account Number - ", accountNumber, svmOutput, "\n")
-                if (svmOutput == const$normalBehaviour) {
+                cat("SVM Behaviour Output for Account Number - ", accountNumber, ifelse(as.character(svmOutput) != const$abnormalBehaviour, const$normalBehaviour, const$abnormalBehaviour), "\n")
+                if (as.character(svmOutput) == const$normalBehaviour) {
+                    cat("Skipping random forest validation.\n")
                     cat(const$lineBreaker)
                 } else {
                     checkForAlert <- snroPAA$alertGenerator(accountNumber, const$inBoundCreditType, const$inBoundCredit, configData, fp)
@@ -128,8 +124,9 @@ alertGeneration <- function() {
             } else {
                 # Run the data against support vector machine
                 svmOutput <- fp$supportVectorMachine(result$AccountDetails, configData, accountNumber, const$inBoundDebit)
-                cat("SVM Output for Account Number - ", accountNumber, svmOutput, "\n")
-                if (svmOutput == const$normalBehaviour) {
+                cat("SVM Output for Account Number - ", accountNumber, ifelse(as.character(svmOutput) != const$abnormalBehaviour, const$normalBehaviour, const$abnormalBehaviour), "\n")
+                if (as.character(svmOutput) == const$normalBehaviour) {
+                    cat("Skipping random forest validation.\n")
                     cat(const$lineBreaker)
                 } else {
                     checkForAlert <- snroPAA$alertGenerator(accountNumber, const$inBoundDebitType, const$inBoundDebit, configData)
