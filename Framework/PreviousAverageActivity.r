@@ -108,7 +108,11 @@ getAggregateCurrentMonthsTransaction <- function(data, accountNumber, inBoundTyp
     currentMonthsFirstDate <- ceiling_date(Sys.Date() - months(1), "month")
     if (nrow(data >= 1)) {
         data <- subset(data, data$Date >= currentMonthsFirstDate)
-        return (sum(data$Amount))
+        if (nrow(data) >= 1) {
+            return (sum(data$Amount))
+        } else {
+            return (0)
+        }
     } else {
         return (0)
     }       
