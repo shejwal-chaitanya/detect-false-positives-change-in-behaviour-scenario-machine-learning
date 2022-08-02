@@ -5,6 +5,7 @@ library(caTools)
 library(e1071)
 library(randomForest)
 library(dplyr)
+library(caret)
 
 # File imports
 source("../Framework/Constants.r", local = const <- new.env())
@@ -115,7 +116,7 @@ supportVectorMachine <- function(data, configData, accountNumber, inBound) {
     predictedValues <- predict(svmModel, test, type = "class")
 
     # Accuracy
-    cat("Accuracy of the model -- ", (mean(predictedValues == test[, 3])) * 100, "%\n")
+    cat("Accuracy of the SVM model -- ", (mean(predictedValues == test[, 3])) * 100, "%\n")
     # Current data prediction with the model
     currentData <- generateTestDataFrame(accountNumber, inBound)
     return(predict(svmModel, currentData$AccountDetails, type = "response"))
@@ -131,30 +132,30 @@ randomForest <- function(accountNumber, inBound, alertData) {
     # Retrieving data for the given acc number and inbound type
     data <- subset(data, data$AccountNumber == accountNumber & data$InBound == inBound)
 
-    if (nrow(data) > 0) {
-        # Converting FP to factors as it is our output and categorical variable
-        data$FP <- as.factor(data$FP)
+    # Filtering data
+    data <- select(data, -c("AccountNumber", "InBound"))
 
-        # Creating training and testing dataset
-        split <- caTools:sample.split(data, SplitRatio = 0.7)
-        train <- subset(data, split == TRUE)
-        test <- subset(data, split == FALSE)
+    # Converting FP to factors as it is our output and categorical variable
+    data$FP <- as.factor(data$FP)
+
+    if (nrow(data) > 0 & nlevels(data$FP) == 2) {
 
         # Generating random forest model
-        rdModel <- randomForest(FP ~., data = train, mtry = 4, ntree = 2000, importance = TRUE)
+        rdModel <- randomForest::randomForest(FP ~., data = data)
 
         # plot model
-        plot(rdModel)
+        # plot(rdModel)
 
         # Prediction
-        result <- as.vector(predcit(rdModel, select(alertData, -c("AccountNumber", "InBound"))))
+        result <- predict(rdModel, newdata = alertData)
 
-        if (result == "1") {
+        if (result == "Yes") {
             return(const$falsePositive)
         } else {
             return(const$negFalsePositive)
         }
     } else {
+        cat("Insufficient data to run random forest algorithm for account number -", accountNumber)
         return(const$dataNotFound)
     }
 }

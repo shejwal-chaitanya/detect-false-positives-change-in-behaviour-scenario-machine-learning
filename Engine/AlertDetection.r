@@ -94,7 +94,12 @@ alertGeneration <- function() {
             } else {
                 # Run the data against support vector machine
                 svmOutput <- fp$supportVectorMachine(result$AccountDetails, configData, accountNumber, const$inBoundCredit)
-                cat("SVM Output for Account Number - ", accountNumber, svmOutput, "\n")
+                if (svmOutput == "1") {
+                    svmOutput <- "Abnormal"
+                } else {
+                    svmOutput <- "Normal"
+                }
+                cat("SVM Behaviour Output for Account Number - ", accountNumber, svmOutput, "\n")
                 if (svmOutput == const$normalBehaviour) {
                     cat(const$lineBreaker)
                 } else {

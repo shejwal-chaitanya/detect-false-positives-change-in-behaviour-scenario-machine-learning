@@ -16,7 +16,7 @@ generateAlert <- function(accountNumber, inBound, amount, date) {
     return(alertDataFrame)
 }
 
-generateTestDataFrameRandomForest <- function(accountNumber, inBound, diffAggAvg, mulStdDevMinSd, mulStdDevMaxSd, aggCurrentMonthTransactions, mulAvgAmountMinPercentageIncrease, result) {
+generateTestDataFrameRandomForest <- function(accountNumber, inBound, diffAggAvg, mulStdDevMinSd, mulStdDevMaxSd, aggCurrentMonthTransactions, mulAvgAmountMinPercentageIncrease) {
     output <- data.frame(
         AccountNumber <- accountNumber,
         InBound <- inBound,
@@ -24,10 +24,9 @@ generateTestDataFrameRandomForest <- function(accountNumber, inBound, diffAggAvg
         MinSd <- mulStdDevMinSd,
         MaxSd <- mulStdDevMaxSd,
         AggAmount <- aggCurrentMonthTransactions,
-        AvgAmountPercentageIncrease <- mulAvgAmountMinPercentageIncrease,
-        FP <- ifelse(result == TRUE, 1, 0)
+        AvgAmountPercentageIncrease <- mulAvgAmountMinPercentageIncrease
     )
-    names(output) <- c("AccountNumber", "InBound","DiffAggAvg", "MinSd", "MaxSd", "AggAmount", "AvgAmountPercentageIncrease", "FP")
+    names(output) <- c("AccountNumber", "InBound","DiffAggAvg", "MinSd", "MaxSd", "AggAmount", "AvgAmountPercentageIncrease")
     return(output)
 }
 
@@ -76,29 +75,35 @@ alertGenerator <- function(accountNumber, inBoundType, inBound, configData, fpOb
     # (aggCurrentMonthTransactions - avgAmount) >= Product of Average Amount with Minimum Percentage Increase
     diffAggAvgGreaterProductAvgAmountMicPercentageIncrease <- diffAggAvg >= mulAvgAmountMinPercentageIncrease
 
-    alertData <- generateTestDataFrameRandomForest(accountNumber, inBound, diffAggAvg, mulStdDevMinSd, mulStdDevMaxSd, aggCurrentMonthTransactions, mulAvgAmountMinPercentageIncrease, TRUE)
+    alertData <- generateTestDataFrameRandomForest(accountNumber, inBound, diffAggAvg, mulStdDevMinSd, mulStdDevMaxSd, aggCurrentMonthTransactions, mulAvgAmountMinPercentageIncrease)
 
     if (accountOpenDateMatch & diffAggAvgGreaterProductSdMinMatch & diffAggAvgLesserProductSdMaxMatch & averageAmountExceedsMinCurrentAmountMatch & diffAggAvgGreaterProductAvgAmountMicPercentageIncrease) {
 
         # Re-run using random forest
         # If output of random forest signifies that its FP, then send to analyst, else to supervisor
-        randomForestOutput <- fpObject$randomForest(accountNumber, inBound, alertData)
+        randomForestOutput <- fp$randomForest(accountNumber, inBound, alertData)
         if (randomForestOutput == const$falsePositive) {
-            cat("Random Forest evaluation -\n", "Is False Positive - TRUE\n", "Sent to Analyst\n")
-            storeAlertGeneratorResults(alertData)
-        } else if (randomForestOutput == const$negFalsePositive) {
             cat("Random Forest evaluation -\n", "Is False Positive - TRUE\n", "Sent to Supervisor\n")
+            alertData$FP = "Yes"
             storeAlertGeneratorResults(alertData)
+            cat(const$lineBreaker)
+        } else if (randomForestOutput == const$negFalsePositive) {
+            cat("Random Forest evaluation -\n", "Is False Positive - FALSE\n", "Sent to Analyst\n")
+            alertData$FP = "No"
+            storeAlertGeneratorResults(alertData)
+            cat(const$lineBreaker)
         } else {
-            cat(paste("Data not found for account number", accountNumber, "with InBound Type:", inBound))
-            storeAlertGeneratorResults(alertData)
+            cat(paste("Data not found for account number", accountNumber, "with InBound Type:", inBound, "\n"))
+            cat("Sent to analyst for further analysis. Analyst will store the results in history for further use.\n")
+            cat(const$lineBreaker)
         }
         alertGenerate <- generateAlert(accountNumber, inBound, aggCurrentMonthTransactions, today())
 
         return(alertGenerate)
     } else {
-        cat("Random Forest evaluation -", "Is False Positive - FALSE\n")
-        storeAlertGeneratorResults(alertData)
+        cat("Alert not generated. Skipped(Random Forest Evaluation)\n")
+        alertData$FP = "Yes"
+        cat(const$lineBreaker)
         return(data.frame())
     }
 }
