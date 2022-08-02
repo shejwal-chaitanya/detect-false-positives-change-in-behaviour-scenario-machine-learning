@@ -90,14 +90,12 @@ alertGeneration <- function() {
             hcResult <- fp$hierarchicalClustering(accountNumber, result$EntireAccountHistory["Amount"], configData, const$inBoundCreditType)
             cat("Hierarchical Clustering Output For Account Number -", accountNumber,hcResult, "\n")
             if(hcResult == const$normalBehaviour) {
-                next
                 cat(const$lineBreaker)
             } else {
                 # Run the data against support vector machine
                 svmOutput <- fp$supportVectorMachine(result$AccountDetails, configData, accountNumber, const$inBoundCredit)
                 cat("SVM Output for Account Number - ", accountNumber, svmOutput, "\n")
                 if (svmOutput == const$normalBehaviour) {
-                    next
                     cat(const$lineBreaker)
                 } else {
                     checkForAlert <- snroPAA$alertGenerator(accountNumber, const$inBoundCreditType, const$inBoundCredit, configData, fp)
@@ -121,14 +119,12 @@ alertGeneration <- function() {
             hcResult <- fp$hierarchicalClustering(accountNumber, result$EntireAccountHistory["Amount"], configData, const$inBoundDebitType)
             cat("Hierarchical Clustering Output For Account Number -", accountNumber, " ",  hcResult, "\n")
             if(hcResult == const$normalBehaviour) {
-                next
                 cat(const$lineBreaker)
             } else {
                 # Run the data against support vector machine
                 svmOutput <- fp$supportVectorMachine(result$AccountDetails, configData, accountNumber, const$inBoundDebit)
                 cat("SVM Output for Account Number - ", accountNumber, svmOutput, "\n")
                 if (svmOutput == const$normalBehaviour) {
-                    next
                     cat(const$lineBreaker)
                 } else {
                     checkForAlert <- snroPAA$alertGenerator(accountNumber, const$inBoundDebitType, const$inBoundDebit, configData)

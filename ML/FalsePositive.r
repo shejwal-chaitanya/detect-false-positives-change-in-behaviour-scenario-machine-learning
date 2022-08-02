@@ -144,7 +144,7 @@ randomForest <- function(accountNumber, inBound, alertData) {
         rdModel <- randomForest(FP ~., data = train, mtry = 4, ntree = 2000, importance = TRUE)
 
         # plot model
-        plot(rfModel)
+        plot(rdModel)
 
         # Prediction
         result <- as.vector(predcit(rdModel, select(alertData, -c("AccountNumber", "InBound"))))
